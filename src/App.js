@@ -1,5 +1,6 @@
 import React from 'react';
 import Dropzone from 'react-dropzone';
+import classNames from 'classnames';
 import Papa from 'papaparse';
 import teams from './teams.json';
 import {Icon, Container, Table, Loader, Header, Segment} from 'semantic-ui-react';
@@ -84,30 +85,32 @@ export default class App extends React.Component {
   }
 
   render() {
+    const {isProcessing, stats} = this.state;
     return (
-      <Container textAlign='center' style={{padding: '2em 0'}}>
-        <Header size='huge' style={{paddingBottom: '1em'}}>Batting Averages</Header>
+      <Container style={{padding: '2em 0'}}>
+        <Header textAlign='center' size='huge' style={{padding: '1em 0'}}>Batting Average</Header>
         <Dropzone onDrop={this.handleOnFileDrop}>
           {({getRootProps, getInputProps}) => (
-            <Segment
-              color="blue"
-              inverted
-              tertiary
-              padded="very"
-              disabled={this.state.isProcessing}
-              {...getRootProps()}
-            >
+            <div
+            className={classNames(
+              'ui blue inverted tertiary very padded center aligned segment', {
+              disabled: isProcessing
+            })}
+            style={{cursor: isProcessing ? 'auto' : 'pointer'}}
+            {...getRootProps()}>
               <input {...getInputProps()} />
               <Icon name="cloud upload" size="big" />
               <p>Drag and drop or upload .csv file</p>
-            </Segment>
+            </div>
           )}
         </Dropzone>
-        {this.state.isProcessing && (
-          <Loader indeterminate size="medium" active inline>Processing your .csv file... Please wait.</Loader>
+        {isProcessing && (
+          <section style={{textAlign: "center"}}>
+            <Loader indeterminate size="medium" active inline>Processing your .csv file... Please wait.</Loader>
+          </section>
         )}
-        {this.state.stats !== null && (
-            <Table celled>
+        {stats !== null && (
+          <Table celled>
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>playerID</Table.HeaderCell>
@@ -117,7 +120,7 @@ export default class App extends React.Component {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {this.state.stats.averages.map((a, i) => (
+              {stats.averages.map((a, i) => (
                 <Table.Row key={i}>
                   <Table.Cell>{a.playerID}</Table.Cell>
                   <Table.Cell>{a.yearID}</Table.Cell>
