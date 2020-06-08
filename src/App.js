@@ -2,7 +2,7 @@ import React from 'react';
 import Dropzone from 'react-dropzone';
 import Papa from 'papaparse';
 import teams from './teams.json';
-import {Icon, Container, Table, Loader, Header} from 'semantic-ui-react';
+import {Icon, Container, Table, Loader, Header, Segment} from 'semantic-ui-react';
 
 export default class App extends React.Component {
   state = {
@@ -87,17 +87,20 @@ export default class App extends React.Component {
     return (
       <Container textAlign='center' style={{padding: '2em 0'}}>
         <Header size='huge' style={{paddingBottom: '1em'}}>Batting Averages</Header>
-        <Dropzone onDrop={this.handleOnFileDrop} disabled={this.state.isProcessing}>
+        <Dropzone onDrop={this.handleOnFileDrop}>
           {({getRootProps, getInputProps}) => (
-            <div
-              className="ui center aligned tertiary blue inverted segment"
+            <Segment
+              color="blue"
+              inverted
+              tertiary
+              padded="very"
+              disabled={this.state.isProcessing}
               {...getRootProps()}
-              style={{padding: '40px 0 40px 0'}}
             >
               <input {...getInputProps()} />
               <Icon name="cloud upload" size="big" />
-              <div>Drag and drop or upload .csv file</div>
-            </div>
+              <p>Drag and drop or upload .csv file</p>
+            </Segment>
           )}
         </Dropzone>
         {this.state.isProcessing && (
