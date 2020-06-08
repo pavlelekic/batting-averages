@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import Papa from 'papaparse';
 import teams from './teams.json';
 import memoize from 'memoize-one';
-import {Icon, Container, Table, Loader, Header, Form, Input, Select} from 'semantic-ui-react';
+import {Icon, Container, Table, Loader, Header, Form, Select} from 'semantic-ui-react';
 
 export default class App extends React.Component {
   state = {
@@ -12,7 +12,7 @@ export default class App extends React.Component {
     isProcessing: false
   };
 
-  calcBattingAverages(rows) {
+  static calcBattingAverages(rows) {
     const playerIDs = {};
     const yearIDs = {};
     const totals = {};
@@ -71,7 +71,7 @@ export default class App extends React.Component {
       stats: null
     });
     Papa.parse(acceptedFiles[0], {
-      // worker: true,
+      worker: true,
       header: true,
       dynamicTyping: true,
       delimiter: ",",
@@ -79,7 +79,7 @@ export default class App extends React.Component {
       fastMode: true,
       skipEmptyLines: true,
       complete: (results) => {
-        const stats = this.calcBattingAverages(results.data);
+        const stats = App.calcBattingAverages(results.data);
         this.setState({
           stats,
           isProcessing: false
@@ -89,6 +89,15 @@ export default class App extends React.Component {
   }
 
   renderTable() {
+    const { selectedPlayerID, selectedYearID } = this.state.stats;
+    let filteredAverages = this.state.stats.averages;
+    if (selectedPlayerID) {
+      filteredAverages = filteredAverages.filter(a => a.playerID === selectedPlayerID);
+    }
+    if (selectedYearID) {
+      const selectedYearIDAsInt = parseInt(selectedYearID, 10);
+      filteredAverages = filteredAverages.filter(a => a.yearID === selectedYearIDAsInt);
+    }
     return (
       <Table celled>
         <Table.Header>
@@ -100,7 +109,7 @@ export default class App extends React.Component {
           </Table.Row>
         </Table.Header>
         <Table.Body>
-          {this.state.stats.averages.map((a, i) => (
+          {filteredAverages.map((a, i) => (
             <Table.Row key={i}>
               <Table.Cell>{a.playerID}</Table.Cell>
               <Table.Cell>{a.yearID}</Table.Cell>
@@ -134,28 +143,42 @@ export default class App extends React.Component {
     );
   }
 
-  renderFilters = memoize((stats) => {
-    return (
-      <Form>
-        <Form.Group>
+  renderFilters = memoize((stats) => (
+    <Form>
+      <Form.Group>
+      <Form.Field
+          control={Select}
+          options={stats.uniquePlayerIDs.map(p => ({ key: p, value: p, text: p }))}
+          label={{ children: 'playerID',  htmlFor: 'form-select-control-player-id' }}
+          search
+          searchInput={{ id: 'form-select-control-player-id' }}
+          clearable
+          lazyLoad
+          onChange={(_, data) => this.setState({
+            stats: {
+              ...this.state.stats,
+              selectedPlayerID: data.value
+            }
+          })}
+        />
         <Form.Field
-            control={Select}
-            options={stats.uniquePlayerIDs.map(p => ({ key: p, value: p, text: p }))}
-            label={{ children: 'playerID',  htmlFor: 'form-select-control-player-id' }}
-            search
-            searchInput={{ id: 'form-select-control-player-id' }}
-          />
-          <Form.Field
-            control={Select}
-            options={stats.uniqueYearIDs.map(y => ({ key: y, value: y, text: y }))}
-            label={{ children: 'yearID',  htmlFor: 'form-select-control-year-id' }}
-            search
-            searchInput={{ id: 'form-select-control-year-id' }}
-          />
-        </Form.Group>
-      </Form>
-    );
-  });
+          control={Select}
+          options={stats.uniqueYearIDs.map(y => ({ key: y, value: y, text: y }))}
+          label={{ children: 'yearID',  htmlFor: 'form-select-control-year-id' }}
+          search
+          searchInput={{ id: 'form-select-control-year-id' }}
+          clearable
+          lazyLoad
+          onChange={(_, data) => this.setState({
+            stats: {
+              ...this.state.stats,
+              selectedYearID: data.value
+            }
+          })}
+        />
+      </Form.Group>
+    </Form>
+  ));
 
   renderPleaseWait = () => (
     <section style={{textAlign: "center"}}>
